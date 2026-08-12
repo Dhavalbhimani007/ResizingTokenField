@@ -8,6 +8,7 @@
 
 import UIKit
 
+@available(iOS 13.0, *)
 open class ResizingTokenField: UIView, UICollectionViewDataSource, UICollectionViewDelegate, ResizingTokenFieldFlowLayoutDelegate {
     
     // MARK: - Configuration
@@ -110,6 +111,31 @@ open class ResizingTokenField: UIView, UICollectionViewDataSource, UICollectionV
     /// Placeholder shown by the text field.
     public var placeholder: String? {
         didSet { textField?.placeholder = placeholder }
+    }
+    
+    public var placeholderColor: UIColor = .placeholderText {
+        didSet { updatePlaceholder() }
+    }
+
+    private func updatePlaceholder() {
+        guard let placeholder = placeholder else {
+            textField?.attributedPlaceholder = nil
+            return
+        }
+        textField?.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [.foregroundColor: placeholderColor]
+        )
+    }
+    
+    /// Auto-capitalization behavior for the text field.
+    public var autocapitalizationType: UITextAutocapitalizationType = .sentences {
+        didSet { textField?.autocapitalizationType = autocapitalizationType }
+    }
+
+    /// Auto-correction behavior for the text field.
+    public var autocorrectionType: UITextAutocorrectionType = .default {
+        didSet { textField?.autocorrectionType = autocorrectionType }
     }
     
     /// Use to get/set currently displayed text.
@@ -490,12 +516,21 @@ open class ResizingTokenField: UIView, UICollectionViewDataSource, UICollectionV
             textFieldCell.textField.text = text
         }
         
-        textFieldCell.textField.placeholder = placeholder
+        if let placeholder = placeholder {
+            textFieldCell.textField.attributedPlaceholder = NSAttributedString(
+                string: placeholder,
+                attributes: [.foregroundColor: placeholderColor]
+            )
+        } else {
+            textFieldCell.textField.attributedPlaceholder = nil
+        }
         textFieldCell.textField.font = viewModel.font
         textFieldCell.textField.returnKeyType = preferredTextFieldReturnKeyType
         textFieldCell.textField.enablesReturnKeyAutomatically = preferredTextFieldEnablesReturnKeyAutomatically
         textFieldCell.textField.delegate = textFieldDelegate
         textFieldCell.textField.textColor = textFieldTextColor
+        textFieldCell.textField.autocapitalizationType = autocapitalizationType   // ← was missing
+        textFieldCell.textField.autocorrectionType = autocorrectionType
         textFieldCell.textField.addTarget(self, action: #selector(textFieldEditingChanged(_:)), for: .editingChanged)
         textFieldCell.textField.addTarget(self, action: #selector(textFieldEditingDidBegin(_:)), for: .editingDidBegin)
         textFieldCell.textField.addTarget(self, action: #selector(textFieldEditingDidEnd(_:)), for: .editingDidEnd)
